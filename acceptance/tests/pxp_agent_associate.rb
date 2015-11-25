@@ -2,6 +2,15 @@ test_name 'C93807 - Associate pxp-agent with a PCP broker'
 
 agent1 = agents[0]
 
+step 'Setup - Add base certs and config file'
+test_ssl_dir = agent1.tmpdir('test-ssl')
+scp_to(agent1, '../test-resources/ssl', test_ssl_dir)
+test_ssl_dir = File.join(test_ssl_dir, 'ssl')
+create_remote_file(agent1, pxp_agent_config_file(agent1), pxp_config_json_using_test_certs(master, agent1, 1, test_ssl_dir).to_s)
+if agent1['platform'] =~ /windows/
+  on agent1, "chmod -R 744 #{test_ssl_dir.gsub('C:/cygwin64', '')}"
+end
+
 step 'Stop pxp-agent if it is currently running'
 on agent1, puppet('resource service pxp-agent ensure=stopped')
 
