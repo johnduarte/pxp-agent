@@ -42,6 +42,19 @@ def pxp_agent_dir(host)
   "/opt/puppetlabs/puppet/bin"
 end
 
+def configure_standard_certs_in_tmpdir(host, cert_number)
+  test_ssl_dir = host.tmpdir('test-ssl')
+  scp_to(host, '../test-resources/ssl', test_ssl_dir)
+  test_ssl_dir = File.join(test_ssl_dir, 'ssl')
+  create_remote_file(host, pxp_agent_config_file(host), pxp_config_json_using_test_certs(master, host, cert_number, test_ssl_dir).to_s)
+  # The tmpdir method gives only 700 permissions to the directory it creates.
+  # On Windows, 744 is needed so that the system user can read the files when running as a service
+  if windows?(host)
+    on host, "chmod -R 744 #{test_ssl_dir.gsub('C:/cygwin64', '')}"
+  end
+  return test_ssl_dir
+end
+
 # @param broker hostname or beaker host object of the machine running pcp-broker
 # @param agent beaker host object of the agent machine that will receive this config
 # @param ssl_config hash of strings for the config keys

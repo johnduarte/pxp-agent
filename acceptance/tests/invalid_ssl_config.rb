@@ -23,13 +23,7 @@ def wait_for_log_entry(host, logfile, expected)
 end
 
 step 'Setup - Add base certs and config file'
-test_ssl_dir = agent1.tmpdir('test-ssl')
-scp_to(agent1, '../test-resources/ssl', test_ssl_dir)
-test_ssl_dir = File.join(test_ssl_dir, 'ssl')
-create_remote_file(agent1, pxp_agent_config_file(agent1), pxp_config_json_using_test_certs(master, agent1, 1, test_ssl_dir).to_s)
-if agent1['platform'] =~ /windows/
-  on agent1, "chmod -R 744 #{test_ssl_dir.gsub('C:/cygwin64', '')}"
-end
+test_ssl_dir = configure_standard_certs_in_tmpdir(agent1, 1)
 
 # On teardown, restore valid config file
 teardown do
